@@ -1,0 +1,3 @@
+import type { Metadata } from 'next'
+export const metadata: Metadata = { title: '隱私權政策', description: 'MangaRead 如何處理網站使用資料與第三方廣告 Cookie。' }
+export default function PrivacyPage() { return <article className="prose prose-invert max-w-3xl"><h1>隱私權政策</h1><p>本網站可能使用伺服器記錄與必要的技術資料，以維持網站運作、排查錯誤及改善閱讀體驗。本站不要求建立帳號。</p><h2>第三方服務與廣告</h2><p>若網站啟用 Google AdSense，Google 及其合作夥伴可能使用 Cookie 或類似技術，依使用者造訪本網站或其他網站的情形提供及衡量廣告。使用者可透過 Google 廣告設定管理個人化廣告偏好；所在地區適用的同意選項亦會依 Google 提供的機制顯示。</p><h2>外部資料來源</h2><p>漫畫目錄資料由 MangaDex API 提供，閱讀圖片可能由 MangaDex 的內容傳遞服務提供。使用外部服務時，該服務的隱私權政策亦可能適用。</p><h2>政策更新</h2><p>本政策會隨網站功能與適用要求更新。若您有隱私相關問題，請透過 MangaDex 作品頁聯絡相關內容管理者；本站目前沒有收集帳號資料的聯絡表單。</p></article> }

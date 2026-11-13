@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" role="img" aria-label="尚無封面">
+  <rect width="400" height="600" fill="#111827"/>
+  <path d="M200 170c-46-34-96-34-136-18v260c40-16 90-16 136 18 46-34 96-34 136-18V152c-40-16-90-16-136 18Z" fill="none" stroke="#f97316" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M200 174v252" stroke="#f97316" stroke-width="10"/>
+  <text x="200" y="490" fill="#9ca3af" font-family="sans-serif" font-size="24" text-anchor="middle">尚無封面</text>
+</svg>
