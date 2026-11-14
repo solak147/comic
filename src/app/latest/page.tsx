@@ -1,33 +1,36 @@
-import type { Metadata } from 'next'
 import { getLatestManga, getCoverUrl, getMangaTitle } from '@/lib/mangadex'
 import { formatRelativeTime, getPageNumber } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 import Pagination from '@/app/components/Pagination'
+import { getLocale } from '@/lib/locale'
+import { getMessages } from '@/lib/i18n'
 
-export const metadata: Metadata = {
-  title: '最新更新漫畫',
-  description: '查看最近更新的漫畫，不錯過任何新章節。',
+export async function generateMetadata() {
+  const messages = getMessages(await getLocale())
+  return { title: messages.latestPageTitle, description: messages.latestPageDescription }
 }
 
 type Props = { searchParams: Promise<{ page?: string | string[] }> }
 
 export default async function LatestPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams
+  const locale = await getLocale()
+  const messages = getMessages(locale)
   const page = getPageNumber(pageParam)
   const limit = 20
-  const results = await getLatestManga(limit, (page - 1) * limit)
+  const results = await getLatestManga(limit, (page - 1) * limit, locale)
   return (
     <div>
       <nav className="text-sm text-gray-500 mb-4">
-        <Link href="/" className="hover:text-orange-400">首頁</Link>
+        <Link href="/" className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-300">最新更新</span>
+        <span className="text-gray-300">{messages.navLatest}</span>
       </nav>
-      <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">🆕 最新更新漫畫</h1>
+      <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">🆕 {messages.latestPageTitle}</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         {results.data.map((manga) => {
-          const title = getMangaTitle(manga)
+          const title = getMangaTitle(manga, locale)
           const coverUrl = getCoverUrl(manga, '256')
           return (
             <Link key={manga.id} href={`/manga/${manga.id}`}
@@ -37,13 +40,13 @@ export default async function LatestPage({ searchParams }: Props) {
               </div>
               <div className="p-3">
                 <h3 className="text-sm font-semibold text-gray-100 line-clamp-2 group-hover:text-orange-400 transition-colors">{title}</h3>
-                <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(manga.attributes.updatedAt)}</p>
+                <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(manga.attributes.updatedAt, locale)}</p>
               </div>
             </Link>
           )
         })}
       </div>
-      <Pagination href="/latest" page={page} limit={limit} total={results.total ?? 0} />
+      <Pagination href="/latest" page={page} limit={limit} total={results.total ?? 0} locale={locale} />
     </div>
   )
 }

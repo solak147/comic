@@ -1,33 +1,36 @@
-import type { Metadata } from 'next'
 import { getPopularManga, getCoverUrl, getMangaTitle } from '@/lib/mangadex'
 import { getPageNumber } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 import Pagination from '@/app/components/Pagination'
+import { getLocale } from '@/lib/locale'
+import { getMessages } from '@/lib/i18n'
 
-export const metadata: Metadata = {
-  title: '熱門漫畫排行榜',
-  description: '探索最受歡迎的熱門漫畫，根據人氣排行，找到您喜歡的漫畫。',
+export async function generateMetadata() {
+  const messages = getMessages(await getLocale())
+  return { title: messages.popularPageTitle, description: messages.popularPageDescription }
 }
 
 type Props = { searchParams: Promise<{ page?: string | string[] }> }
 
 export default async function PopularPage({ searchParams }: Props) {
   const { page: pageParam } = await searchParams
+  const locale = await getLocale()
+  const messages = getMessages(locale)
   const page = getPageNumber(pageParam)
   const limit = 20
-  const results = await getPopularManga(limit, (page - 1) * limit)
+  const results = await getPopularManga(limit, (page - 1) * limit, locale)
   return (
     <div>
       <nav className="text-sm text-gray-500 mb-4">
-        <Link href="/" className="hover:text-orange-400">首頁</Link>
+        <Link href="/" className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-300">熱門漫畫</span>
+        <span className="text-gray-300">{messages.navPopular}</span>
       </nav>
-      <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">🔥 熱門漫畫排行榜</h1>
+      <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">{messages.popularPageTitle}</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         {results.data.map((manga, i) => {
-          const title = getMangaTitle(manga)
+          const title = getMangaTitle(manga, locale)
           const coverUrl = getCoverUrl(manga, '256')
           return (
             <Link key={manga.id} href={`/manga/${manga.id}`}
@@ -43,7 +46,7 @@ export default async function PopularPage({ searchParams }: Props) {
           )
         })}
       </div>
-      <Pagination href="/popular" page={page} limit={limit} total={results.total ?? 0} />
+      <Pagination href="/popular" page={page} limit={limit} total={results.total ?? 0} locale={locale} />
     </div>
   )
 }

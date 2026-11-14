@@ -1,3 +1,5 @@
+import { getMessages, translate, type Locale } from '@/lib/i18n'
+
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength).trim() + '...'
@@ -9,42 +11,44 @@ export function getPageNumber(page?: string | string[]): number {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1
 }
 
-export function formatChapterTitle(chapter: { attributes: { chapter: string | null; title: string | null; volume: string | null } }): string {
+export function formatChapterTitle(chapter: { attributes: { chapter: string | null; title: string | null; volume: string | null } }, locale: Locale = 'zh-TW'): string {
   const ch = chapter.attributes.chapter
   const title = chapter.attributes.title
   const vol = chapter.attributes.volume
   let result = ''
-  if (vol) result += `Vol.${vol} `
-  if (ch) result += `Ch.${ch}`
+  if (vol) result += `${translate(locale, 'volumeNumber', { volume: vol })} `
+  if (ch) result += locale === 'en' ? `Chapter ${ch}` : `第 ${ch} 話`
   if (title && title !== ch) result += `: ${title}`
-  return result.trim() || 'Oneshot'
+  return result.trim() || getMessages(locale).oneShot
 }
 
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string, locale: Locale = 'zh-TW'): string {
   const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })
+  return date.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-export function formatRelativeTime(dateStr: string): string {
+export function formatRelativeTime(dateStr: string, locale: Locale = 'zh-TW'): string {
   const date = new Date(dateStr)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const hours = Math.floor(diff / (1000 * 60 * 60))
-  if (hours < 1) return '剛剛'
-  if (hours < 24) return `${hours} 小時前`
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+  if (hours < 1) return rtf.format(0, 'minute')
+  if (hours < 24) return rtf.format(-hours, 'hour')
   const days = Math.floor(hours / 24)
-  if (days < 30) return `${days} 天前`
+  if (days < 30) return rtf.format(-days, 'day')
   const months = Math.floor(days / 30)
-  if (months < 12) return `${months} 個月前`
-  return `${Math.floor(months / 12)} 年前`
+  if (months < 12) return rtf.format(-months, 'month')
+  return rtf.format(-Math.floor(months / 12), 'year')
 }
 
-export function getStatusLabel(status: string): string {
+export function getStatusLabel(status: string, locale: Locale = 'zh-TW'): string {
+  const labels = getMessages(locale)
   const map: Record<string, string> = {
-    ongoing: '連載中',
-    completed: '已完結',
-    hiatus: '暫停',
-    cancelled: '已取消',
+    ongoing: labels.statusOngoing,
+    completed: labels.statusCompleted,
+    hiatus: labels.statusHiatus,
+    cancelled: labels.statusCancelled,
   }
   return map[status] || status
 }

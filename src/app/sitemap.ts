@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getPopularManga, getLatestManga } from '@/lib/mangadex'
+import { LOCALES } from '@/lib/i18n'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
@@ -11,7 +12,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
   ]
   try {
-    const manga = await Promise.all([getPopularManga(40), getLatestManga(40)])
+    const manga = await Promise.all(LOCALES.flatMap((locale) => [
+      getPopularManga(40, 0, locale),
+      getLatestManga(40, 0, locale),
+    ]))
     const unique = new Map(manga.flatMap((result) => result.data).map((item) => [item.id, item]))
     return [...staticPages, ...Array.from(unique.values(), (item) => ({
       url: `${SITE_URL}/manga/${item.id}`,

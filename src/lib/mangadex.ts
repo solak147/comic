@@ -1,4 +1,10 @@
+import { DEFAULT_LOCALE, getLocalizedTagName, getMangaDexLanguage, getMangaTitleLanguages, getMessages, type Locale } from '@/lib/i18n'
+
 const BASE_URL = 'https://api.mangadex.org'
+const CONTENT_RATINGS = ['safe', 'suggestive', 'erotica', 'pornographic']
+export const MANGA_CHAPTER_PAGE_SIZE = 20
+const MANGA_CHAPTER_API_LIMIT = 500
+export type ChapterLanguageMode = 'site' | 'all'
 
 export interface MangaAttributes {
   title: Record<string, string>
@@ -7,6 +13,7 @@ export interface MangaAttributes {
   status: string
   year: number | null
   contentRating: string
+  links?: Record<string, string>
   tags: Array<{ id: string; attributes: { name: Record<string, string>; group: string } }>
   originalLanguage: string
   lastVolume: string | null
@@ -55,6 +62,19 @@ export interface MangaDexResponse<T> {
   total?: number
 }
 
+export interface MangaStatistics {
+  follows: number
+  rating: {
+    average: number | null
+    bayesian: number | null
+  }
+}
+
+export interface MangaExternalLink {
+  label: string
+  url: string
+}
+
 export function getCoverUrl(manga: Manga, size: '256' | '512' | null = null): string {
   const coverRel = manga.relationships.find((r) => r.type === 'cover_art')
   if (!coverRel || !coverRel.attributes?.['fileName']) return '/placeholder-cover.svg'
@@ -63,15 +83,29 @@ export function getCoverUrl(manga: Manga, size: '256' | '512' | null = null): st
   return `/api/covers/${manga.id}/${encodeURIComponent(fileName)}${query}`
 }
 
-export function getMangaTitle(manga: Manga, lang = 'zh-hk'): string {
+export function getMangaTitle(manga: Manga, locale: Locale = DEFAULT_LOCALE): string {
   const title = manga.attributes.title
-  return title[lang] || title['zh'] || title['en'] || title['ja-ro'] || Object.values(title)[0] || 'Unknown Title'
+  const localizedTitle = getMangaTitleLanguages(locale)
+    .map((lang) => title[lang] || manga.attributes.altTitles.find((altTitle) => altTitle[lang])?.[lang])
+    .find(Boolean)
+  return localizedTitle || Object.values(title)[0] || 'Unknown Title'
 }
 
-export function getMangaDescription(manga: Manga, lang = 'zh-hk'): string {
+export function getMangaDescription(manga: Manga, locale: Locale = DEFAULT_LOCALE): string {
   const desc = manga.attributes.description
   if (!desc) return ''
-  return desc[lang] || desc['zh'] || desc['en'] || Object.values(desc)[0] || ''
+  return getMangaTitleLanguages(locale).map((lang) => desc[lang]).find(Boolean)
+    || desc[manga.attributes.originalLanguage]
+    || desc['en']
+    || ''
+}
+
+export function getMangaTagName(tag: MangaAttributes['tags'][number], locale: Locale): string {
+  const localizedName = getMangaTitleLanguages(locale).map((lang) => tag.attributes.name[lang]).find(Boolean)
+    || tag.attributes.name.en
+    || Object.values(tag.attributes.name)[0]
+    || ''
+  return getLocalizedTagName(localizedName, locale)
 }
 
 export function getAuthorName(manga: Manga): string {
@@ -87,6 +121,30 @@ export function getSafeExternalUrl(value: string | null): string | null {
   } catch {
     return null
   }
+}
+
+export function getMangaExternalLinks(manga: Manga, locale: Locale): MangaExternalLink[] {
+  const links = manga.attributes.links ?? {}
+  const messages = getMessages(locale)
+  const externalLinks: MangaExternalLink[] = [
+    { label: messages.mangaDex, url: `https://mangadex.org/title/${manga.id}` },
+  ]
+  const addUrl = (label: string, value: string | undefined, baseUrl?: string) => {
+    if (!value) return
+    const url = getSafeExternalUrl(baseUrl ? `${baseUrl}${encodeURIComponent(value)}` : value)
+    if (url) externalLinks.push({ label, url })
+  }
+
+  addUrl(messages.officialSource, links['raw'])
+  addUrl(messages.officialEnglish, links['engtl'])
+  addUrl(messages.aniList, links['al'], 'https://anilist.co/manga/')
+  addUrl(messages.animePlanet, links['ap'], 'https://www.anime-planet.com/manga/')
+  addUrl(messages.kitsu, links['kt'], 'https://kitsu.io/manga/')
+  addUrl(messages.mangaUpdates, links['mu'], 'https://www.mangaupdates.com/series/')
+  addUrl(messages.myAnimeList, links['mal'], 'https://myanimelist.net/manga/')
+  addUrl(messages.novelUpdates, links['nu'], 'https://www.novelupdates.com/series/')
+
+  return externalLinks
 }
 
 async function apiFetch<T>(path: string, params?: Record<string, string | string[] | number>): Promise<T> {
@@ -110,61 +168,115 @@ async function apiFetch<T>(path: string, params?: Record<string, string | string
   return res.json() as Promise<T>
 }
 
-const COMMON_PARAMS = {
+const commonParams = (locale: Locale) => ({
   'includes[]': ['cover_art', 'author'],
-  'contentRating[]': ['safe', 'suggestive'],
-  'availableTranslatedLanguage[]': ['zh', 'zh-hk', 'en'],
-}
+  'contentRating[]': CONTENT_RATINGS,
+  'availableTranslatedLanguage[]': [getMangaDexLanguage(locale)],
+})
 
-export async function getPopularManga(limit = 20, offset = 0): Promise<MangaDexResponse<Manga[]>> {
+export async function getPopularManga(limit = 20, offset = 0, locale: Locale = DEFAULT_LOCALE): Promise<MangaDexResponse<Manga[]>> {
   const data = await apiFetch<MangaDexResponse<Manga[]>>('/manga', {
     limit,
     offset,
-    ...COMMON_PARAMS,
+    ...commonParams(locale),
     'order[followedCount]': 'desc',
-    'contentRating[]': ['safe', 'suggestive'],
   })
   return data
 }
 
-export async function getLatestManga(limit = 20, offset = 0): Promise<MangaDexResponse<Manga[]>> {
+export async function getLatestManga(limit = 20, offset = 0, locale: Locale = DEFAULT_LOCALE): Promise<MangaDexResponse<Manga[]>> {
   const data = await apiFetch<MangaDexResponse<Manga[]>>('/manga', {
     limit,
     offset,
-    ...COMMON_PARAMS,
+    ...commonParams(locale),
     'order[updatedAt]': 'desc',
-    'contentRating[]': ['safe', 'suggestive'],
   })
   return data
 }
 
-export async function searchManga(query: string, limit = 20, offset = 0): Promise<MangaDexResponse<Manga[]>> {
+export async function searchManga(query: string, limit = 20, offset = 0, locale: Locale = DEFAULT_LOCALE): Promise<MangaDexResponse<Manga[]>> {
   return apiFetch<MangaDexResponse<Manga[]>>('/manga', {
     title: query,
     limit,
     offset,
-    ...COMMON_PARAMS,
-    'contentRating[]': ['safe', 'suggestive'],
+    ...commonParams(locale),
   })
 }
 
 export async function getMangaById(id: string): Promise<Manga> {
   const data = await apiFetch<MangaDexResponse<Manga>>(`/manga/${id}`, {
     'includes[]': ['cover_art', 'author', 'artist'],
-    'contentRating[]': ['safe', 'suggestive'],
+    'contentRating[]': CONTENT_RATINGS,
   })
   return data.data
 }
 
-export async function getMangaChapters(mangaId: string, offset = 0): Promise<MangaDexResponse<Chapter[]>> {
-  return apiFetch<MangaDexResponse<Chapter[]>>(`/manga/${mangaId}/feed`, {
-    limit: 96,
-    offset,
-    'translatedLanguage[]': ['zh', 'zh-hk', 'en'],
+export async function getMangaStatistics(id: string): Promise<MangaStatistics | null> {
+  const data = await apiFetch<{ statistics: Record<string, MangaStatistics> }>(`/statistics/manga/${id}`)
+  return data.statistics[id] ?? null
+}
+
+export async function getMangaChapters(
+  mangaId: string,
+  offset = 0,
+  locale: Locale = DEFAULT_LOCALE,
+  languageMode: ChapterLanguageMode = 'site'
+): Promise<MangaDexResponse<Chapter[]>> {
+  const params = {
     'order[chapter]': 'desc',
-    'contentRating[]': ['safe', 'suggestive'],
+    'contentRating[]': CONTENT_RATINGS,
     'includes[]': ['scanlation_group'],
-  })
+  }
+  if (languageMode === 'site') {
+    return apiFetch<MangaDexResponse<Chapter[]>>(`/manga/${mangaId}/feed`, {
+      ...params,
+      limit: MANGA_CHAPTER_PAGE_SIZE,
+      offset,
+      'translatedLanguage[]': [getMangaDexLanguage(locale)],
+    })
+  }
+
+  const fetchPage = (pageOffset: number) =>
+    apiFetch<MangaDexResponse<Chapter[]>>(`/manga/${mangaId}/feed`, {
+      ...params,
+      limit: MANGA_CHAPTER_API_LIMIT,
+      offset: pageOffset,
+    })
+  const firstPage = await fetchPage(0)
+  const total = firstPage.total ?? firstPage.data.length
+  const remainingPages = await Promise.all(
+    Array.from(
+      { length: Math.ceil(total / MANGA_CHAPTER_API_LIMIT) - 1 },
+      (_, index) => fetchPage((index + 1) * MANGA_CHAPTER_API_LIMIT)
+    )
+  )
+  const languagePriority = new Map(getMangaTitleLanguages(locale).map((language, index) => [language, index]))
+  const chaptersByNumber = new Map<string, Chapter>()
+
+  for (const chapter of [...firstPage.data, ...remainingPages.flatMap((page) => page.data)]) {
+    const number = chapter.attributes.chapter?.trim()
+    const normalizedNumber = number && Number.isFinite(Number(number))
+      ? String(Number(number))
+      : number?.toLocaleLowerCase()
+    const key = normalizedNumber ? `chapter:${normalizedNumber}` : `id:${chapter.id}`
+    const existing = chaptersByNumber.get(key)
+    if (
+      !existing ||
+      (languagePriority.get(chapter.attributes.translatedLanguage) ?? Infinity) <
+        (languagePriority.get(existing.attributes.translatedLanguage) ?? Infinity)
+    ) {
+      chaptersByNumber.set(key, chapter)
+    }
+  }
+
+  const chapters = [...chaptersByNumber.values()]
+  return {
+    ...firstPage,
+    data: chapters.slice(offset, offset + MANGA_CHAPTER_PAGE_SIZE),
+    limit: MANGA_CHAPTER_PAGE_SIZE,
+    offset,
+    total: chapters.length,
+  }
 }
 
 export async function getMangaTags(): Promise<Array<{ id: string; attributes: { name: Record<string, string>; group: string } }>> {
@@ -172,12 +284,12 @@ export async function getMangaTags(): Promise<Array<{ id: string; attributes: { 
   return data.data
 }
 
-export async function getMangaByTagId(tagId: string, limit = 20, offset = 0): Promise<MangaDexResponse<Manga[]>> {
+export async function getMangaByTagId(tagId: string, limit = 20, offset = 0, locale: Locale = DEFAULT_LOCALE): Promise<MangaDexResponse<Manga[]>> {
   const data = await apiFetch<MangaDexResponse<Manga[]>>('/manga', {
     limit,
     offset,
     'includedTags[]': tagId,
-    ...COMMON_PARAMS,
+    ...commonParams(locale),
     'order[followedCount]': 'desc',
   })
   return data
@@ -193,7 +305,7 @@ export async function getChapterById(chapterId: string): Promise<Chapter> {
   return data.data
 }
 
-export async function getMangaByTag(tagName: string, limit = 20): Promise<Manga[]> {
+export async function getMangaByTag(tagName: string, limit = 20, locale: Locale = DEFAULT_LOCALE): Promise<Manga[]> {
   // First get tag id
   const tagsData = await apiFetch<{ data: Array<{ id: string; attributes: { name: Record<string, string> } }> }>('/manga/tag')
   const tag = tagsData.data.find((t) => t.attributes.name['en']?.toLowerCase() === tagName.toLowerCase())
@@ -201,9 +313,8 @@ export async function getMangaByTag(tagName: string, limit = 20): Promise<Manga[
   const data = await apiFetch<MangaDexResponse<Manga[]>>('/manga', {
     limit,
     'includedTags[]': tag.id,
-    'includes[]': ['cover_art', 'author'],
     'order[followedCount]': 'desc',
-    'contentRating[]': ['safe', 'suggestive'],
+    ...commonParams(locale),
   })
   return data.data
 }
