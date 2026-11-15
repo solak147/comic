@@ -4,7 +4,7 @@
 
 ## 環境設定
 
-在部署平台設定正式網域及已核准的 AdSense ID：
+本機可先複製 `.env.example` 為 `.env.local`；部署時在平台設定正式網域及已核准的 AdSense ID：
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://your-domain.example
