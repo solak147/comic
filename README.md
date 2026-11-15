@@ -16,7 +16,7 @@ NEXT_PUBLIC_ADSENSE_SLOT_MANGA=...
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=...
 ```
 
-未設定客戶 ID 或版位 ID 時不會顯示廣告。請先在 AdSense 核准網站並建立廣告版位，再於部署環境設定正式值並重新建置。有效的 `NEXT_PUBLIC_ADSENSE_CLIENT` 也會用來產生 `/ads.txt`；未設定時此路徑會回覆 404，格式錯誤則回覆伺服器錯誤。
+未設定客戶 ID 或版位 ID 時不會顯示廣告。請先在 AdSense 核准網站並建立廣告版位，再於部署環境設定正式值並重新建置。`public/ads.txt` 需與 AdSense 帳戶中的 Publisher ID 保持一致；若帳戶 ID 變更，請同步更新該檔。
 
 閱讀器暫不放置廣告。啟用 AdSense 前，請確認作品及圖片有可營利的使用授權，並完成適用地區的同意管理平台（CMP）設定；目前專案尚未整合 CMP。請在隱私權政策填入實際營運者聯絡方式，並在 AdSense 後台確認網站審核狀態及 `/ads.txt` 狀態。部署後請在 Google Search Console 驗證網域並提交 `/sitemap.xml`。
 
