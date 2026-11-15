@@ -2,7 +2,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Image as ImageIcon, Zap } from 'lucide-react'
-import AdUnit from '@/app/components/AdUnit'
 import { getMessages, translate, type Locale } from '@/lib/i18n'
 import type { ChapterLanguageMode } from '@/lib/mangadex'
 import { localePath } from '@/lib/locale-path'
@@ -114,9 +113,6 @@ export default function ChapterReader({
           </div>
         ))}
       </div>
-
-      {/* Bottom Ad */}
-      <div className="max-w-3xl mx-auto px-4"><AdUnit slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_READER} label={messages.advertisement} /></div>
 
       {/* Chapter Navigation */}
       <div className="max-w-3xl mx-auto px-4 pb-10">
