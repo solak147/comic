@@ -2,10 +2,16 @@ import Link from 'next/link'
 import { getMangaTags } from '@/lib/mangadex'
 import { getLocale } from '@/lib/locale'
 import { getMessages, getMangaTitleLanguages, getLocalizedTagName } from '@/lib/i18n'
+import { localePath, localizedMetadata } from '@/lib/locale-path'
 
 export async function generateMetadata() {
-  const messages = getMessages(await getLocale())
-  return { title: messages.genresPageTitle, description: messages.genresPageDescription }
+  const locale = await getLocale()
+  const messages = getMessages(locale)
+  return {
+    title: messages.genresPageTitle,
+    description: messages.genresPageDescription,
+    alternates: localizedMetadata(locale, '/genres'),
+  }
 }
 
 const GENRES = [
@@ -59,7 +65,7 @@ export default async function GenresPage() {
   return (
     <div>
       <nav className="text-sm text-gray-500 mb-4">
-        <Link href="/" className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
+        <Link href={localePath(locale, '/')} className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-300">{messages.categoriesBreadcrumb}</span>
       </nav>
@@ -72,7 +78,7 @@ export default async function GenresPage() {
               {section.tags.map((tag) => (
                 <Link
                   key={tag.id || tag.name}
-                  href={`/genre/${tag.id || encodeURIComponent(tag.name)}`}
+                  href={localePath(locale, `/genre/${tag.id || encodeURIComponent(tag.name)}`)}
                   className="flex items-center gap-3 p-4 rounded-xl bg-gray-900 border border-gray-800 hover:border-orange-400 hover:bg-gray-800 transition-all group"
                 >
                   <span className="text-2xl">

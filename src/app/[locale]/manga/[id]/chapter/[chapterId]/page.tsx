@@ -7,6 +7,7 @@ import { getMangaById, getMangaTitle } from '@/lib/mangadex'
 import { getLocale } from '@/lib/locale'
 import { getMessages, translate } from '@/lib/i18n'
 import { getPageNumber } from '@/lib/utils'
+import { localizedMetadata } from '@/lib/locale-path'
 
 type Props = {
   params: Promise<{ id: string; chapterId: string }>
@@ -28,6 +29,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       ? `${getMangaTitle(manga, locale)} ${chapter.attributes.chapter ? translate(locale, 'chapterNumber', { chapter: chapter.attributes.chapter }) : messages.oneShot} ${messages.chapterReading}`
       : `${getMangaTitle(manga, locale)} ${messages.chapterReading}`,
     robots: { index: false },
+    alternates: localizedMetadata(locale, `/manga/${id}/chapter/${chapterId}`),
   }
 }
 

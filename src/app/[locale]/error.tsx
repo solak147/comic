@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { DEFAULT_LOCALE, getMessages } from '@/lib/i18n'
+import { localePath } from '@/lib/locale-path'
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => { console.error(error) }, [error])
   const messages = getMessages(DEFAULT_LOCALE)
@@ -14,7 +15,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <button onClick={reset} className="px-6 py-3 bg-orange-500 hover:bg-orange-400 text-white rounded-lg font-medium transition-colors">
           {messages.retry}
         </button>
-        <Link href="/" className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors">
+        <Link href={localePath(DEFAULT_LOCALE, '/')} className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors">
           {messages.backHome}
         </Link>
       </div>

@@ -1,15 +1,23 @@
+import type { Metadata } from 'next'
 import { getPopularManga, getLatestManga, getCoverUrl, getMangaTitle, getAuthorName } from '@/lib/mangadex'
 import { getStatusLabel, getStatusColor } from '@/lib/utils'
 import type { Manga } from '@/lib/mangadex'
 import Link from 'next/link'
 import { getLocale } from '@/lib/locale'
 import { getMessages, type Locale } from '@/lib/i18n'
-import AdUnit from './components/AdUnit'
-import CoverImage from './components/CoverImage'
+import { localePath, localizedMetadata } from '@/lib/locale-path'
+import AdUnit from '@/app/components/AdUnit'
+import CoverImage from '@/app/components/CoverImage'
 
-export async function generateMetadata() {
-  const messages = getMessages(await getLocale())
-  return { title: messages.homeTitle, description: messages.siteDescription }
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale()
+  const messages = getMessages(locale)
+  return {
+    title: messages.homeTitle,
+    description: messages.siteDescription,
+    alternates: localizedMetadata(locale, '/'),
+    openGraph: { url: localePath(locale, '/') },
+  }
 }
 
 function MangaCard({ manga, locale }: { manga: Manga; locale: Locale }) {
@@ -18,7 +26,7 @@ function MangaCard({ manga, locale }: { manga: Manga; locale: Locale }) {
   const author = getAuthorName(manga)
   const status = manga.attributes.status
   return (
-    <Link href={`/manga/${manga.id}`} className="group flex flex-col bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-orange-400 transition-all hover:shadow-lg hover:shadow-orange-400/10">
+    <Link href={localePath(locale, `/manga/${manga.id}`)} className="group flex flex-col bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-orange-400 transition-all hover:shadow-lg hover:shadow-orange-400/10">
       <div className="relative aspect-[2/3] overflow-hidden bg-gray-800">
         <CoverImage
           src={coverUrl}
@@ -52,10 +60,11 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: messages.siteName,
-    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app',
+    url: localePath(locale, '/'),
+    inLanguage: locale,
     potentialAction: {
       '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'}/search?q={search_term_string}` },
+      target: { '@type': 'EntryPoint', urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'}${localePath(locale, '/search')}?q={search_term_string}` },
       'query-input': 'required name=search_term_string',
     },
   }
@@ -80,7 +89,7 @@ export default async function HomePage() {
       <section className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">{messages.popularHeading}</h2>
-          <Link href="/popular" className="text-sm text-orange-400 hover:underline">{messages.seeAll}</Link>
+          <Link href={localePath(locale, '/popular')} className="text-sm text-orange-400 hover:underline">{messages.seeAll}</Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {popular.data.map((manga) => <MangaCard key={manga.id} manga={manga} locale={locale} />)}
@@ -94,7 +103,7 @@ export default async function HomePage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">{messages.latestHeading}</h2>
-          <Link href="/latest" className="text-sm text-orange-400 hover:underline">{messages.seeAll}</Link>
+          <Link href={localePath(locale, '/latest')} className="text-sm text-orange-400 hover:underline">{messages.seeAll}</Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {latest.data.map((manga) => <MangaCard key={manga.id} manga={manga} locale={locale} />)}

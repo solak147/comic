@@ -5,10 +5,16 @@ import Link from 'next/link'
 import Pagination from '@/app/components/Pagination'
 import { getLocale } from '@/lib/locale'
 import { getMessages } from '@/lib/i18n'
+import { localePath, localizedMetadata } from '@/lib/locale-path'
 
 export async function generateMetadata() {
-  const messages = getMessages(await getLocale())
-  return { title: messages.popularPageTitle, description: messages.popularPageDescription }
+  const locale = await getLocale()
+  const messages = getMessages(locale)
+  return {
+    title: messages.popularPageTitle,
+    description: messages.popularPageDescription,
+    alternates: localizedMetadata(locale, '/popular'),
+  }
 }
 
 type Props = { searchParams: Promise<{ page?: string | string[] }> }
@@ -23,7 +29,7 @@ export default async function PopularPage({ searchParams }: Props) {
   return (
     <div>
       <nav className="text-sm text-gray-500 mb-4">
-        <Link href="/" className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
+        <Link href={localePath(locale, '/')} className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-300">{messages.navPopular}</span>
       </nav>
@@ -33,7 +39,7 @@ export default async function PopularPage({ searchParams }: Props) {
           const title = getMangaTitle(manga, locale)
           const coverUrl = getCoverUrl(manga, '256')
           return (
-            <Link key={manga.id} href={`/manga/${manga.id}`}
+            <Link key={manga.id} href={localePath(locale, `/manga/${manga.id}`)}
               className="group relative flex flex-col bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-orange-400 transition-all">
               <div className="relative aspect-[2/3] overflow-hidden bg-gray-800">
                 <Image src={coverUrl} alt={title} fill sizes="(max-width:640px) 50vw, 20vw" className="object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />

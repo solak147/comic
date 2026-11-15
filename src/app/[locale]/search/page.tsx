@@ -6,17 +6,19 @@ import Link from 'next/link'
 import { getLocale } from '@/lib/locale'
 import { getMessages, translate } from '@/lib/i18n'
 import { getPageNumber } from '@/lib/utils'
+import { localePath, localizedMetadata } from '@/lib/locale-path'
 
 type Props = { searchParams: Promise<{ q?: string; page?: string | string[] }> }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { q } = await searchParams
-  const messages = getMessages(await getLocale())
+  const locale = await getLocale()
+  const messages = getMessages(locale)
   return {
     title: q ? `${messages.searchHeading}: ${q}` : messages.searchHeading,
     description: q ? `${messages.searchHeading}: ${q}` : messages.searchPlaceholder,
     robots: q ? { index: false, follow: true } : { index: true, follow: true },
-    alternates: { canonical: '/search' },
+    alternates: localizedMetadata(locale, '/search'),
   }
 }
 
@@ -36,7 +38,7 @@ export default async function SearchPage({ searchParams }: Props) {
   return (
     <div>
       {/* Search bar */}
-      <form action="/search" method="GET" className="mb-8">
+      <form action={localePath(locale, '/search')} method="GET" className="mb-8">
         <div className="flex gap-2">
           <input
             name="q"
@@ -75,7 +77,7 @@ export default async function SearchPage({ searchParams }: Props) {
                 const coverUrl = getCoverUrl(manga, '256')
                 const author = getAuthorName(manga)
                 return (
-                  <Link key={manga.id} href={`/manga/${manga.id}`}
+                  <Link key={manga.id} href={localePath(locale, `/manga/${manga.id}`)}
                     className="group flex flex-col bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-orange-400 transition-all">
                     <div className="relative aspect-[2/3] overflow-hidden bg-gray-800">
                       <Image src={coverUrl} alt={title} fill sizes="(max-width:640px) 50vw, 20vw" className="object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />
@@ -95,14 +97,14 @@ export default async function SearchPage({ searchParams }: Props) {
           {(results.total ?? 0) > limit && (
             <div className="flex justify-center gap-2 mt-8">
               {pageNum > 1 && (
-                <Link href={`/search?q=${encodeURIComponent(q)}&page=${pageNum - 1}`}
+                <Link href={localePath(locale, `/search?q=${encodeURIComponent(q)}&page=${pageNum - 1}`)}
                   className="px-4 py-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors">
                   {messages.previousPage}
                 </Link>
               )}
               <span className="px-4 py-2 text-gray-400 text-sm">{translate(locale, 'page', { page: pageNum })}</span>
               {offset + limit < (results.total ?? 0) && (
-                <Link href={`/search?q=${encodeURIComponent(q)}&page=${pageNum + 1}`}
+                <Link href={localePath(locale, `/search?q=${encodeURIComponent(q)}&page=${pageNum + 1}`)}
                   className="px-4 py-2 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors">
                   {messages.nextPage}
                 </Link>

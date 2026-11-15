@@ -8,6 +8,7 @@ import Pagination from '@/app/components/Pagination'
 import { notFound } from 'next/navigation'
 import { getLocale } from '@/lib/locale'
 import { getMessages, translate } from '@/lib/i18n'
+import { localePath, localizedMetadata } from '@/lib/locale-path'
 import type { ChapterLanguageMode } from '@/lib/mangadex'
 import ChapterLanguageSwitcher from '@/app/components/ChapterLanguageSwitcher'
 
@@ -33,8 +34,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       images: [{ url: coverUrl, width: 512, alt: title }],
       type: 'book',
+      url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'}${localePath(locale, `/manga/${id}`)}`,
     },
     twitter: { card: 'summary', title, description, images: [coverUrl] },
+    alternates: localizedMetadata(locale, `/manga/${id}`),
   }
 }
 
@@ -67,14 +70,20 @@ export default async function MangaPage({ params, searchParams }: Props) {
     author: { '@type': 'Person', name: author },
     description: description.slice(0, 300),
     image: coverUrl,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'}${localePath(locale, `/manga/${id}`)}`,
+    identifier: { '@type': 'PropertyValue', propertyID: 'MangaDex', value: manga.id },
+    genre: manga.attributes.tags
+      .filter((tag) => tag.attributes.group === 'genre')
+      .map((tag) => getMangaTagName(tag, locale)),
+    dateModified: manga.attributes.updatedAt,
     inLanguage: locale,
   }
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: messages.homeBreadcrumb, item: process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app' },
-      { '@type': 'ListItem', position: 2, name: title },
+      { '@type': 'ListItem', position: 1, name: messages.homeBreadcrumb, item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'}${localePath(locale, '/')}` },
+      { '@type': 'ListItem', position: 2, name: title, item: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'}${localePath(locale, `/manga/${id}`)}` },
     ],
   }
 
@@ -88,7 +97,7 @@ export default async function MangaPage({ params, searchParams }: Props) {
 
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-4">
-        <Link href="/" className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
+        <Link href={localePath(locale, '/')} className="hover:text-orange-400">{messages.homeBreadcrumb}</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-300">{title}</span>
       </nav>
@@ -198,7 +207,7 @@ export default async function MangaPage({ params, searchParams }: Props) {
                   return (
                     <Link
                       key={chapter.id}
-                      href={`/manga/${id}/chapter/${chapter.id}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`}
+                      href={localePath(locale, `/manga/${id}/chapter/${chapter.id}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`)}
                       className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-orange-400/50 transition-all group"
                     >
                       <span className="text-sm text-gray-200 group-hover:text-orange-400 transition-colors">
@@ -213,7 +222,7 @@ export default async function MangaPage({ params, searchParams }: Props) {
               </div>
             )}
             <Pagination
-              href={`/manga/${id}`}
+              href={localePath(locale, `/manga/${id}`)}
               page={chapterPage}
               limit={MANGA_CHAPTER_PAGE_SIZE}
               total={chaptersData.total ?? 0}
@@ -234,7 +243,7 @@ export default async function MangaPage({ params, searchParams }: Props) {
                 return (
                   <Link
                     key={item.id}
-                    href={`/manga/${item.id}`}
+                    href={localePath(locale, `/manga/${item.id}`)}
                     className="group flex gap-3 overflow-hidden rounded-lg border border-gray-800 bg-gray-900 p-2 hover:border-orange-400 transition-colors"
                   >
                     <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded bg-gray-800">

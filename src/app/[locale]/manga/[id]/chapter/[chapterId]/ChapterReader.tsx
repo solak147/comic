@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Image as ImageIcon, Zap } from 'lucide-react
 import AdUnit from '@/app/components/AdUnit'
 import { getMessages, translate, type Locale } from '@/lib/i18n'
 import type { ChapterLanguageMode } from '@/lib/mangadex'
+import { localePath } from '@/lib/locale-path'
 
 interface Props {
   mangaId: string
@@ -59,7 +60,7 @@ export default function ChapterReader({
       {/* Top Nav */}
       <div className="sticky top-14 z-40 bg-gray-900/95 backdrop-blur border-b border-gray-800 px-4 py-2 flex items-center justify-between gap-2">
         <Link
-          href={`/manga/${mangaId}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`}
+          href={localePath(locale, `/manga/${mangaId}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`)}
           className="flex items-center gap-1 text-sm text-gray-400 hover:text-orange-400 transition-colors shrink-0"
         >
           <ChevronLeft size={16} />
@@ -122,7 +123,7 @@ export default function ChapterReader({
         <div className="flex items-center justify-between gap-4">
           {prevChapterId ? (
             <Link
-              href={`/manga/${mangaId}/chapter/${prevChapterId}?chapterPage=${prevChapterPage}&chapterLanguage=${languageMode}`}
+              href={localePath(locale, `/manga/${mangaId}/chapter/${prevChapterId}?chapterPage=${prevChapterPage}&chapterLanguage=${languageMode}`)}
               className="flex items-center gap-2 px-4 py-3 rounded-lg bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white transition-all flex-1 justify-center"
             >
               <ChevronLeft size={18} />
@@ -133,7 +134,7 @@ export default function ChapterReader({
           )}
 
           <Link
-            href={`/manga/${mangaId}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`}
+            href={localePath(locale, `/manga/${mangaId}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`)}
             className="px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-all shrink-0"
           >
             {messages.chapterList}
@@ -141,7 +142,7 @@ export default function ChapterReader({
 
           {nextChapterId ? (
             <Link
-              href={`/manga/${mangaId}/chapter/${nextChapterId}?chapterPage=${nextChapterPage}&chapterLanguage=${languageMode}`}
+              href={localePath(locale, `/manga/${mangaId}/chapter/${nextChapterId}?chapterPage=${nextChapterPage}&chapterLanguage=${languageMode}`)}
               className="flex items-center gap-2 px-4 py-3 rounded-lg bg-gray-800 hover:bg-orange-500 text-gray-300 hover:text-white transition-all flex-1 justify-center"
             >
               <span>{messages.nextChapter}</span>
@@ -149,7 +150,7 @@ export default function ChapterReader({
             </Link>
           ) : (
             <Link
-              href={`/manga/${mangaId}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`}
+              href={localePath(locale, `/manga/${mangaId}?chapterPage=${chapterPage}&chapterLanguage=${languageMode}`)}
               className="flex items-center gap-2 px-4 py-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-white transition-all flex-1 justify-center"
             >
               <span>{messages.finishedReading}</span>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getMessages, translate, type Locale } from '@/lib/i18n'
+import { localePath } from '@/lib/locale-path'
 
 type Props = {
   href: string
@@ -29,7 +30,7 @@ export default function Pagination({
   const pageHref = (pageNumber: number) => {
     const params = new URLSearchParams(extraParams)
     params.set(paramName, String(pageNumber))
-    return `${href}?${params.toString()}`
+    return localePath(locale, `${href}?${params.toString()}`)
   }
 
   return (

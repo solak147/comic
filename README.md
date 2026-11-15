@@ -19,11 +19,12 @@ NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=...
 
 未設定客戶 ID 或版位 ID 時不會顯示廣告。請先在 AdSense 核准網站並建立廣告版位，再填入正式值。部署後請在 Google Search Console 驗證網域並提交 `/sitemap.xml`。
 
-## SEO 與閱讀
+## SEO、語系與閱讀
 
-- 作品頁輸出動態標題、描述、Open Graph、Book 與 BreadcrumbList 結構化資料。
-- 首頁輸出 WebSite/SearchAction；搜尋結果與閱讀頁不列入索引。
-- Sitemap 收錄主要導覽頁，以及熱門和最近更新作品；分類頁使用 MangaDex 的實際標籤。
+- 語系網址為 `/zh-TW`、`/zh-CN` 與 `/en`；舊的無語系網址會依偏好導向相同頁面的語系網址。
+- 頁面輸出語系標記、canonical 與 hreflang；Sitemap 收錄主要頁面、分類標籤及熱門和最近更新作品。
+- 作品頁輸出動態標題、描述、Open Graph、Book 與 BreadcrumbList 結構化資料；首頁輸出 WebSite/SearchAction。
+- 搜尋結果與閱讀頁不列入索引；`/llms.txt` 提供網站內容與來源摘要。
 - 章節列表目前顯示 API 回傳的前 96 個繁中、簡中與英文章節。
 - 閱讀器支援省流量/高畫質切換、圖片延遲載入及章節前後導覽。
 

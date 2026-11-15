@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import Script from 'next/script'
 import { getLocale } from '@/lib/locale'
-import { getMessages } from '@/lib/i18n'
-import { SiteFooter, SiteHeader } from './components/SiteChrome'
-import './globals.css'
+import { getMessages, LOCALES } from '@/lib/i18n'
+import { SiteFooter, SiteHeader } from '../components/SiteChrome'
+import '../globals.css'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://manga-read.vercel.app'
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || ''
@@ -13,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale()
   const messages = getMessages(locale)
   const localeTag = locale === 'en' ? 'en_US' : locale === 'zh-CN' ? 'zh_CN' : 'zh_TW'
+  const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: messages.siteName, template: `%s | ${messages.siteName}` },
@@ -28,19 +29,23 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       locale: localeTag,
       alternateLocale: ['zh_TW', 'zh_CN', 'en_US'].filter((tag) => tag !== localeTag),
-      url: SITE_URL,
       siteName: messages.siteName,
       title: messages.siteName,
       description: messages.siteDescription,
     },
     twitter: { card: 'summary_large_image', title: messages.siteName, description: messages.siteDescription },
-    verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '' },
+    ...(googleVerification ? { verification: { google: googleVerification } } : {}),
   }
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }))
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
   return (
-    <html lang="zh-TW">
+    <html lang={locale}>
       <body className="min-h-screen bg-gray-950 text-gray-100 antialiased">
         {ADSENSE_CLIENT ? (
           <Script

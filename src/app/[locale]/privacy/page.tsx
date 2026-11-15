@@ -1,10 +1,16 @@
 import type { Metadata } from 'next'
 import { getLocale } from '@/lib/locale'
 import { getMessages } from '@/lib/i18n'
+import { localizedMetadata } from '@/lib/locale-path'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const messages = getMessages(await getLocale())
-  return { title: messages.privacy, description: messages.privacyParagraph1 }
+  const locale = await getLocale()
+  const messages = getMessages(locale)
+  return {
+    title: messages.privacy,
+    description: messages.privacyParagraph1,
+    alternates: localizedMetadata(locale, '/privacy'),
+  }
 }
 
 export default async function PrivacyPage() {

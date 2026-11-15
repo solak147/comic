@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { isLocale, LOCALES, type Locale } from '@/lib/i18n'
+import { localePath } from '@/lib/locale-path'
 
 const LABELS: Record<Locale, string> = {
   'zh-TW': '繁體中文',
@@ -12,6 +13,7 @@ const LABELS: Record<Locale, string> = {
 
 export default function LocaleSwitcher({ label, initialLocale }: { label: string; initialLocale: Locale }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [locale, setLocale] = useState<Locale>(initialLocale)
 
   useEffect(() => {
@@ -23,7 +25,8 @@ export default function LocaleSwitcher({ label, initialLocale }: { label: string
     document.documentElement.lang = nextLocale
     const secure = window.location.protocol === 'https:' ? '; Secure' : ''
     document.cookie = `site-locale=${nextLocale}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`
-    router.refresh()
+    const routePath = pathname.replace(new RegExp(`^/(?:${LOCALES.join('|')})(?=/|$)`), '') || '/'
+    router.replace(`${localePath(nextLocale, routePath)}${window.location.search}${window.location.hash}`)
   }
 
   function handleChange(value: string) {

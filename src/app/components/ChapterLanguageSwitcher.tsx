@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getMessages, type Locale } from '@/lib/i18n'
 import type { ChapterLanguageMode } from '@/lib/mangadex'
+import { localePath } from '@/lib/locale-path'
 
 type Props = {
   mangaId: string
@@ -16,7 +17,7 @@ export default function ChapterLanguageSwitcher({ mangaId, locale, languageMode 
       {(['site', 'all'] as const).map((mode) => (
         <Link
           key={mode}
-          href={`/manga/${mangaId}?chapterLanguage=${mode}&chapterPage=1`}
+          href={localePath(locale, `/manga/${mangaId}?chapterLanguage=${mode}&chapterPage=1`)}
           aria-current={languageMode === mode ? 'page' : undefined}
           className={`rounded border px-3 py-2 text-sm transition-colors ${
             languageMode === mode
